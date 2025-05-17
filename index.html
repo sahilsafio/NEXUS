@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Code Assistant - Conceptual Mockup</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <!-- Custom CSS & Theme Variables -->
+    <style>
+        :root {
+            --primary-color: #4f46e5; /* Indigo-600 */
+            --secondary-color: #ec4899; /* Pink-500 */
+            --bg-color-light: #f9fafb; /* Gray-50 */
+            --bg-color-dark: #1f2937; /* Gray-800 */
+            --text-color-light: #111827; /* Gray-900 */
+            --text-color-dark: #f3f4f6; /* Gray-100 */
+            --sidebar-width: 280px;
+            --toolbar-height: 60px;
+        }
+
+        /* Basic Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Simple Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid var(--primary-color); /* Blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Custom Scrollbar (Optional) */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e5e7eb; /* Gray 200 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9ca3af; /* Gray 400 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* Gray 500 */
+        }
+
+        /* Class for active sidebar item */
+        .sidebar-active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+        .sidebar-active svg {
+             color: white;
+        }
+
+        /* Basic Transition */
+        .transition-all {
+             transition: all 0.3s ease-in-out;
+        }
+
+        /* Drag simulation styles */
+        .draggable {
+            cursor: grab;
+            border: 1px dashed transparent;
+        }
+        .draggable:hover {
+            border-color: var(--primary-color);
+        }
+        .dragging {
+            opacity: 0.7;
+            cursor: grabbing;
+            border: 1px dashed var(--secondary-color);
+        }
+        .selected-element {
+            outline: 2px solid var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3); /* Indigo-600 with opacity */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800" data-theme="light">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-[var(--sidebar-width)] bg-white shadow-lg flex flex-col shrink-0 transition-all duration-300 ease-in-out">
+            <!-- Logo/Title -->
+            <div class="h-[var(--toolbar-height)] flex items-center justify-center border-b border-gray-200 shrink-0">
+                <h1 class="text-xl font-bold text-[var(--primary-color)]">AI Coder</h1>
+            </div>
+
+            <!-- Project Upload/Selection (Simulated) -->
+            <div class="p-4 border-b border-gray-200">
+                <label for="project-upload" class="block text-sm font-medium text-gray-700 mb-2">Load Project:</label>
+                <input type="file" id="project-upload" webkitdirectory directory multiple class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-[var(--primary-color)] file:text-white
+                    hover:file:bg-indigo-700 cursor-pointer" disabled title="Feature requires backend implementation">
+                 <p class="text-xs text-gray-500 mt-1">Upload project folder (conceptual)</p>
+                 <p id="loaded-project" class="mt-2 text-sm font-semibold text-green-600 hidden">Project: MyWebApp Loaded</p>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+                <a href="#dashboard" data-view="dashboard" class="nav-link flex items-center px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-all sidebar-active">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                    Dashboard
+                </a>
+                <a href="#editor" data-view="editor" class="nav-link flex items-center px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-all">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    Visual Editor
+                </a>
+                 <a href="#components" data-view="components" class="nav-link flex items-center px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                    Components
+                </a>
+                 <a href="#routes" data-view="routes" class="nav-link flex items-center px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    Routes
+                </a>
+                <a href="#backend" data-view="backend" class="nav-link flex items-center px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg>
+                    Backend Logic
+                </a>
+                 <a href="#deploy" data-view="deploy" class="nav-link flex items-center px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                    Deployment
+                </a>
+                 <a href="#version" data-view="version" class="nav-link flex items-center px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-all">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                     Version History
+                </a>
+                 <a href="#settings" data-view="settings" class="nav-link flex items-center px-3 py-2 text-gray-700 rounded-md hover:bg-gray-100 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Settings
+                </a>
+            </nav>
+
+            <!-- AI Suggestions Panel -->
+            <div class="p-4 border-t border-gray-200 shrink-0">
+                <h3 class="text-sm font-semibold mb-2 text-gray-800">AI Suggestions</h3>
+                <div id="ai-suggestions" class="text-xs text-gray-600 space-y-1 max-h-24 overflow-y-auto">
+                    <p>⚡ Improve homepage load time.</p>
+                    <p>♿ Add alt text to logo image.</p>
+                    <p>🔒 Review input sanitization on contact form.</p>
+                    <p>📈 Add meta description for better SEO.</p>
+                </div>
+                 <button id="ask-ai-general" class="mt-3 w-full text-xs bg-indigo-100 text-[var(--primary-color)] hover:bg-indigo-200 font-medium py-1 px-2 rounded">Ask AI...</button>
+            </div>
+
+            <!-- Theme Toggle -->
+            <div class="p-4 border-t border-gray-200 shrink-0 flex justify-center">
+                 <button id="theme-toggle" class="p-2 rounded-md hover:bg-gray-100">
+                    <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-700 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                 </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Toolbar (Contextual) -->
+            <div id="toolbar" class="h-[var(--toolbar-height)] bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 shadow-sm">
+                 <h2 id="current-view-title" class="text-lg font-semibold text-gray-800">Dashboard</h2>
+                 <div class="flex items-center space-x-4">
+                    <!-- Contextual Buttons Appear Here -->
+                    <div id="editor-toolbar-items" class="hidden items-center space-x-2">
+                         <button title="Mobile View" class="p-2 rounded hover:bg-gray-100 text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg></button>
+                         <button title="Tablet View" class="p-2 rounded hover:bg-gray-100 text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.753 20.75M12 11a4 4 0 00-4 4h8a4 4 0 00-4-4z" /></svg></button>
+                         <button title="Desktop View" class="p-2 rounded hover:bg-gray-100 text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></button>
+                         <span class="w-px h-6 bg-gray-300"></span>
+                         <button id="undo-btn" class="p-2 rounded hover:bg-gray-100 text-gray-600 disabled:opacity-50" disabled><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a4.95 4.95 0 00-6.265-5.633.9.9 0 00-.622.834v1.591h-.981a1.5 1.5 0 00-1.448 1.274.9.9 0 00.26 1.018l5.387 4.848a.9.9 0 001.268 0l5.387-4.848a.9.9 0 00.26-1.018 1.5 1.5 0 00-1.448-1.274h-.981V6.401a.9.9 0 00-.622-.834 4.95 4.95 0 00-6.265 5.633z" /></svg></button>
+                         <button id="redo-btn" class="p-2 rounded hover:bg-gray-100 text-gray-600 disabled:opacity-50" disabled><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.934 12.8a4.95 4.95 0 006.265-5.633.9.9 0 00.622-.834V4.742h.981a1.5 1.5 0 001.448-1.274.9.9 0 00-.26-1.018L15.633.601a.9.9 0 00-1.268 0L9 5.449a.9.9 0 00-.26 1.018A1.5 1.5 0 0010.189 7.74h.981v1.591a.9.9 0 00.622.834 4.95 4.95 0 006.265 5.633z" /></svg></button> <!-- Note: SVG needs correct redo path -->
+                    </div>
+                    <button class="bg-[var(--primary-color)] text-white px-4 py-1.5 rounded-md text-sm font-medium hover:bg-indigo-700 transition-all">Preview</button>
+                    <button class="bg-green-500 text-white px-4 py-1.5 rounded-md text-sm font-medium hover:bg-green-600 transition-all">Save</button>
+                 </div>
+            </div>
+
+            <!-- Content Views -->
+            <div class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div id="view-dashboard" class="view-content">
+                    <h3 class="text-2xl font-semibold mb-6">Dashboard</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+                            <h4 class="font-semibold text-lg mb-2">Project Status</h4>
+                            <p class="text-sm text-green-600">Active & Deployed</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+                            <h4 class="font-semibold text-lg mb-2">Recent Changes</h4>
+                            <p class="text-sm text-gray-600">Updated Hero Section (2h ago)</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+                            <h4 class="font-semibold text-lg mb-2">Performance Score</h4>
+                            <p class="text-sm text-blue-600">85/100 (Good)</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+                            <h4 class="font-semibold text-lg mb-2">Security Issues</h4>
+                            <p class="text-sm text-red-600">1 Critical (Needs Review)</p>
+                        </div>
+                    </div>
+                     <!-- AI Interaction Example -->
+                     <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-semibold text-lg mb-3">Ask OpenRouter AI</h4>
+                        <p class="text-sm text-gray-600 mb-3">Example: Use AI to get suggestions or ask general questions.</p>
+                        <textarea id="ai-prompt-input" class="w-full p-2 border rounded mb-2 focus:ring-indigo-500 focus:border-indigo-500" rows="3" placeholder="e.g., What are best practices for responsive images?"></textarea>
+                        <button id="send-to-ai-btn" class="bg-[var(--secondary-color)] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-pink-600 transition-all">Send to AI</button>
+                        <div id="ai-response-area" class="mt-4 p-4 bg-gray-50 rounded border border-gray-200 text-sm text-gray-700 hidden">
+                            <p class="font-semibold mb-2">AI Response:</p>
+                            <div id="ai-response-content"></div>
+                             <div id="ai-response-loader" class="loader hidden"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-editor" class="view-content hidden">
+                    <div class="flex h-[calc(100vh-var(--toolbar-height)-48px)]"> <!-- Adjust height based on toolbar/padding -->
+                        <!-- Visual Editor Area (Simulated) -->
+                        <div id="visual-editor-canvas" class="flex-1 bg-white rounded-lg shadow mr-4 p-4 overflow-auto border border-gray-300 relative">
+                            <h4 class="text-center text-gray-400 text-sm absolute top-2 left-1/2 -translate-x-1/2">Visual Preview Area (Simulated)</h4>
+                            <!-- Simulated Website Content -->
+                            <div class="max-w-4xl mx-auto mt-10 space-y-6">
+                                <div id="el-hero" class="p-10 bg-indigo-100 rounded-lg text-center draggable">
+                                    <h1 id="el-heading" class="text-3xl font-bold text-indigo-800 mb-2 editable-text draggable">My Awesome Website</h1>
+                                    <p id="el-paragraph" class="text-indigo-600 editable-text draggable">Visually edit this content!</p>
+                                    <button id="el-button" class="mt-4 px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 draggable">Get Started</button>
+                                </div>
+                                <div id="el-feature1" class="p-6 bg-white rounded shadow flex items-center space-x-4 draggable">
+                                    <div class="bg-pink-100 p-3 rounded-full draggable"><svg class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg></div>
+                                    <div>
+                                        <h3 id="el-f1-title" class="font-semibold text-gray-800 editable-text draggable">Feature One</h3>
+                                        <p id="el-f1-desc" class="text-sm text-gray-600 editable-text draggable">Description of the amazing first feature.</p>
+                                    </div>
+                                </div>
+                                 <div id="el-feature2" class="p-6 bg-white rounded shadow flex items-center space-x-4 draggable">
+                                    <div class="bg-green-100 p-3 rounded-full draggable"><svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                                    <div>
+                                         <h3 id="el-f2-title" class="font-semibold text-gray-800 editable-text draggable">Feature Two</h3>
+                                         <p id="el-f2-desc" class="text-sm text-gray-600 editable-text draggable">More details about the second feature.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inspector/Properties Panel -->
+                        <div id="inspector-panel" class="w-72 bg-white rounded-lg shadow p-4 overflow-y-auto shrink-0 border border-gray-200">
+                            <h4 class="text-sm font-semibold mb-4 border-b pb-2 text-gray-700">Properties Inspector</h4>
+                             <div id="inspector-placeholder" class="text-xs text-gray-500">Select an element in the preview to edit its properties.</div>
+                             <div id="inspector-content" class="hidden space-y-4">
+                                <div id="prop-element-id" class="text-xs font-mono bg-gray-100 p-1 rounded"></div>
+                                <div>
+                                    <label for="prop-text-content" class="block text-xs font-medium text-gray-600 mb-1">Text Content:</label>
+                                    <textarea id="prop-text-content" rows="3" class="w-full p-1 border rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                                </div>
+                                 <div>
+                                     <label for="prop-bg-color" class="block text-xs font-medium text-gray-600 mb-1">Background Color:</label>
+                                     <input type="color" id="prop-bg-color" class="w-full h-8 border rounded">
+                                 </div>
+                                 <div>
+                                     <label for="prop-text-color" class="block text-xs font-medium text-gray-600 mb-1">Text Color:</label>
+                                     <input type="color" id="prop-text-color" class="w-full h-8 border rounded">
+                                 </div>
+                                  <div>
+                                     <label for="prop-padding" class="block text-xs font-medium text-gray-600 mb-1">Padding (px):</label>
+                                     <input type="number" id="prop-padding" class="w-full p-1 border rounded text-sm" min="0" step="1">
+                                 </div>
+                                 <button class="w-full text-xs bg-red-100 text-red-700 hover:bg-red-200 font-medium py-1 px-2 rounded">Remove Element</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <div id="view-components" class="view-content hidden">
+                     <h3 class="text-2xl font-semibold mb-6">Components & Plugins</h3>
+                     <p class="text-gray-600 mb-4">Manage reusable components or integrate third-party plugins (Conceptual).</p>
+                      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                         <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
+                             <h4 class="font-semibold mb-2">Hero Section</h4>
+                             <p class="text-xs text-gray-500 mb-2">Reusable hero banner component.</p>
+                             <button class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200">Add to Page</button>
+                         </div>
+                         <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
+                             <h4 class="font-semibold mb-2">Contact Form</h4>
+                             <p class="text-xs text-gray-500 mb-2">Standard contact form component.</p>
+                             <button class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200">Add to Page</button>
+                         </div>
+                         <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow">
+                             <h4 class="font-semibold mb-2">Stripe Checkout</h4>
+                             <p class="text-xs text-gray-500 mb-2">Plugin for payments.</p>
+                              <button class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">Configure</button>
+                         </div>
+                      </div>
+                 </div>
+
+                 <div id="view-routes" class="view-content hidden">
+                     <h3 class="text-2xl font-semibold mb-6">Route Management</h3>
+                     <p class="text-gray-600 mb-4">Define application routes and associated pages/views (Conceptual).</p>
+                      <table class="min-w-full bg-white shadow rounded-lg">
+                         <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Path</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Page/Component</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                         </thead>
+                         <tbody class="divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">/</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">HomePage</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                    <a href="#" class="text-red-600 hover:text-red-900 ml-4">Delete</a>
+                                </td>
+                            </tr>
+                             <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">/about</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">AboutPage</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                    <a href="#" class="text-red-600 hover:text-red-900 ml-4">Delete</a>
+                                </td>
+                            </tr>
+                             <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">/contact</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ContactForm</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                    <a href="#" class="text-red-600 hover:text-red-900 ml-4">Delete</a>
+                                </td>
+                            </tr>
+                         </tbody>
+                      </table>
+                      <button class="mt-4 bg-[var(--primary-color)] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-all">Add New Route</button>
+                 </div>
+
+                <div id="view-backend" class="view-content hidden">
+                    <h3 class="text-2xl font-semibold mb-6">Backend Logic Editor (Conceptual)</h3>
+                    <p class="text-gray-600 mb-4">Use natural language prompts to modify backend API endpoints or logic. Requires significant AI and backend integration.</p>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <label for="backend-prompt" class="block text-sm font-medium text-gray-700 mb-2">Describe the backend change:</label>
+                        <textarea id="backend-prompt" rows="4" class="w-full p-2 border rounded mb-3 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Create a new API endpoint '/api/users' that returns a list of usernames."></textarea>
+                        <button id="generate-backend-code" class="bg-[var(--primary-color)] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-all">Generate & Apply Change (Simulated)</button>
+
+                         <div id="backend-result" class="mt-6 hidden">
+                            <h4 class="font-semibold mb-2">Generated Code Snippet (Example):</h4>
+                            <pre class="bg-gray-800 text-gray-200 p-4 rounded text-xs overflow-x-auto"><code>// Example for Node.js/Express
+app.get('/api/users', (req, res) => {
+  // In a real app, fetch users from database
+  const users = [{ id: 1, username: 'Alice' }, { id: 2, username: 'Bob' }];
+  res.json(users.map(u => u.username));
+});
+                            </code></pre>
+                            <p class="text-sm text-yellow-600 mt-2">⚠️ Warning: Applying AI-generated code requires careful review and testing.</p>
+                        </div>
+                    </div>
+                </div>
+
+                 <div id="view-deploy" class="view-content hidden">
+                     <h3 class="text-2xl font-semibold mb-6">Deployment Options</h3>
+                     <p class="text-gray-600 mb-4">Configure and manage deployment settings (Conceptual).</p>
+                     <div class="bg-white p-6 rounded-lg shadow space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Deployment Target:</label>
+                            <select class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                <option>Netlify</option>
+                                <option>Vercel</option>
+                                <option>AWS S3/CloudFront</option>
+                                <option>Custom Server (SSH)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Current Status: <span class="text-green-600 font-semibold">Deployed</span> (main branch)</p>
+                            <p class="text-xs text-gray-500">Last deployed: 2 hours ago</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button class="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600 transition-all">Deploy Current Changes</button>
+                             <button class="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-600 transition-all">Rollback to Previous</button>
+                        </div>
+                     </div>
+                 </div>
+
+                 <div id="view-version" class="view-content hidden">
+                    <h3 class="text-2xl font-semibold mb-6">Version History (Simulated Git Log)</h3>
+                    <p class="text-gray-600 mb-4">Review past changes and potentially rollback (Conceptual).</p>
+                    <ul class="bg-white shadow rounded-lg divide-y divide-gray-200">
+                        <li class="p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm font-medium text-indigo-600">feat: Added new hero section content</p>
+                                    <p class="text-xs text-gray-500">Commit <code class="text-xs">a1b2c3d</code> by You - 2 hours ago</p>
+                                </div>
+                                <button class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300">View Details</button>
+                            </div>
+                        </li>
+                        <li class="p-4 hover:bg-gray-50 transition-colors">
+                             <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm font-medium text-indigo-600">style: Updated button colors</p>
+                                    <p class="text-xs text-gray-500">Commit <code class="text-xs">e4f5g6h</code> by You - 1 day ago</p>
+                                </div>
+                                <button class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300">View Details</button>
+                            </div>
+                        </li>
+                         <li class="p-4 hover:bg-gray-50 transition-colors">
+                             <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm font-medium text-indigo-600">fix: Corrected typo on about page</p>
+                                    <p class="text-xs text-gray-500">Commit <code class="text-xs">i7j8k9l</code> by You - 2 days ago</p>
+                                </div>
+                                <button class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300">View Details</button>
+                            </div>
+                        </li>
+                    </ul>
+                 </div>
+
+
+                 <div id="view-settings" class="view-content hidden">
+                     <h3 class="text-2xl font-semibold mb-6">Settings</h3>
+                     <div class="bg-white p-6 rounded-lg shadow space-y-6">
+                        <div>
+                            <h4 class="text-lg font-medium mb-2">Theme Customization</h4>
+                            <div class="flex items-center space-x-4">
+                                <div>
+                                    <label for="primary-color-picker" class="block text-sm font-medium text-gray-700 mb-1">Primary Color</label>
+                                    <input type="color" id="primary-color-picker" value="#4f46e5" class="w-20 h-10 border rounded cursor-pointer">
+                                </div>
+                                 <div>
+                                    <label for="secondary-color-picker" class="block text-sm font-medium text-gray-700 mb-1">Secondary Color</label>
+                                    <input type="color" id="secondary-color-picker" value="#ec4899" class="w-20 h-10 border rounded cursor-pointer">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                             <h4 class="text-lg font-medium mb-2">OpenRouter API Key</h4>
+                             <p class="text-xs text-gray-500 mb-1">Required for AI features. Stored locally in this demo (insecure for real apps).</p>
+                             <input type="password" id="openrouter-api-key" placeholder="Enter your OpenRouter Key" class="w-full md:w-1/2 p-2 border rounded text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                             <button id="save-api-key" class="ml-2 bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-300">Save</button>
+                         </div>
+                          <div>
+                             <h4 class="text-lg font-medium mb-2">Account</h4>
+                             <button class="text-sm text-red-600 hover:underline">Delete Project Data (Simulated)</button>
+                         </div>
+                     </div>
+                 </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Global Notification / Status Bar (Example) -->
+    <div id="status-bar" class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-xs px-4 py-1 flex justify-between items-center hidden">
+        <p id="status-message">Ready</p>
+        <div id="status-loader" class="loader !w-4 !h-4 !border-2 !border-t-white hidden"></div>
+    </div>
+
+
+    <script>
+        // --- Configuration ---
+        const OPENROUTER_API_KEY_STORAGE_KEY = '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';
+        const YOUR_SITE_URL = "<YOUR_SITE_URL>"; // Replace with your actual URL if deploying
+        const YOUR_SITE_NAME = "<YOUR_SITE_NAME>"; // Replace with your actual title
+
+        // --- DOM Elements ---
+        const navLinks = document.querySelectorAll('.nav-link');
+        const views = document.querySelectorAll('.view-content');
+        const currentViewTitle = document.getElementById('current-view-title');
+        const toolbar = document.getElementById('toolbar');
+        const editorToolbarItems = document.getElementById('editor-toolbar-items');
+        const sidebar = document.getElementById('sidebar');
+        const themeToggleButton = document.getElementById('theme-toggle');
+        const themeIconLight = document.getElementById('theme-icon-light');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+        const primaryColorPicker = document.getElementById('primary-color-picker');
+        const secondaryColorPicker = document.getElementById('secondary-color-picker');
+        const aiPromptInput = document.getElementById('ai-prompt-input');
+        const sendToAiBtn = document.getElementById('send-to-ai-btn');
+        const aiResponseArea = document.getElementById('ai-response-area');
+        const aiResponseContent = document.getElementById('ai-response-content');
+        const aiResponseLoader = document.getElementById('ai-response-loader');
+        const openRouterApiKeyInput = document.getElementById('openrouter-api-key');
+        const saveApiKeyBtn = document.getElementById('save-api-key');
+        const askAiGeneralBtn = document.getElementById('ask-ai-general');
+        const generateBackendCodeBtn = document.getElementById('generate-backend-code');
+        const backendResultDiv = document.getElementById('backend-result');
+        const visualEditorCanvas = document.getElementById('visual-editor-canvas');
+        const inspectorPanel = document.getElementById('inspector-panel');
+        const inspectorPlaceholder = document.getElementById('inspector-placeholder');
+        const inspectorContent = document.getElementById('inspector-content');
+        const propElementId = document.getElementById('prop-element-id');
+        const propTextContent = document.getElementById('prop-text-content');
+        const propBgColor = document.getElementById('prop-bg-color');
+        const propTextColor = document.getElementById('prop-text-color');
+        const propPadding = document.getElementById('prop-padding');
+        const statusBar = document.getElementById('status-bar');
+        const statusMessage = document.getElementById('status-message');
+        const statusLoader = document.getElementById('status-loader');
+
+        let currentSelectedElement = null; // Track selected element in editor
+
+        // --- State ---
+        let currentView = 'dashboard';
+        let openRouterApiKey = localStorage.getItem(OPENROUTER_API_KEY_STORAGE_KEY) || '';
+
+        // --- Functions ---
+
+        function showStatus(message, isLoading = false) {
+            statusMessage.textContent = message;
+            statusLoader.classList.toggle('hidden', !isLoading);
+            statusBar.classList.remove('hidden');
+            // Optional: hide after a delay if not loading
+            if (!isLoading) {
+                setTimeout(() => {
+                   // statusBar.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        function hideStatus() {
+             statusBar.classList.add('hidden');
+        }
+
+
+        // Navigate between views
+        function navigateTo(viewId) {
+            currentView = viewId;
+            views.forEach(view => {
+                view.classList.toggle('hidden', view.id !== `view-${viewId}`);
+            });
+
+            navLinks.forEach(link => {
+                link.classList.toggle('sidebar-active', link.dataset.view === viewId);
+                // Update icons in active link
+                 const svg = link.querySelector('svg');
+                 if(link.classList.contains('sidebar-active')) {
+                    svg.classList.add('text-white');
+                    svg.classList.remove('text-gray-500');
+                 } else {
+                    svg.classList.remove('text-white');
+                    svg.classList.add('text-gray-500');
+                 }
+            });
+
+            // Update toolbar title
+            const activeLink = document.querySelector(`.nav-link[data-view="${viewId}"]`);
+            currentViewTitle.textContent = activeLink ? activeLink.textContent.trim() : 'AI Coder';
+
+            // Show/Hide Editor Toolbar Items
+            editorToolbarItems.classList.toggle('hidden', viewId !== 'editor');
+            editorToolbarItems.classList.toggle('flex', viewId === 'editor'); // Use flex to show
+
+
+             // Reset editor selection when leaving editor view
+             if (viewId !== 'editor' && currentSelectedElement) {
+                 deselectElement();
+             }
+        }
+
+        // Set Theme
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark'); // You'd need to define dark mode styles in Tailwind/CSS
+                document.body.dataset.theme = 'dark';
+                themeIconLight.classList.add('hidden');
+                themeIconDark.classList.remove('hidden');
+                // Potentially update root variables for dark theme
+                // document.documentElement.style.setProperty('--bg-color-light', 'var(--bg-color-dark)');
+                // ... etc. Need proper dark mode setup in Tailwind config or CSS
+                console.warn("Dark mode visuals not fully implemented in this demo.");
+            } else {
+                document.body.classList.remove('dark');
+                document.body.dataset.theme = 'light';
+                themeIconLight.classList.remove('hidden');
+                themeIconDark.classList.add('hidden');
+                 // Reset to light theme variables
+                // document.documentElement.style.setProperty('--bg-color-light', '#f9fafb');
+                 // ... etc.
+            }
+        }
+
+        // Toggle Theme
+        function toggleTheme() {
+            const currentTheme = document.body.dataset.theme || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
+            localStorage.setItem('theme', newTheme); // Persist theme choice
+        }
+
+        // Update CSS Variables for Theme Customization
+        function updateThemeColor(variableName, value) {
+             document.documentElement.style.setProperty(variableName, value);
+             // Note: This requires using var(--primary-color) etc in Tailwind classes like bg-[var(--primary-color)]
+             // Or extensive custom CSS. Tailwind doesn't dynamically update based on CSS vars out of the box easily.
+             console.warn("Live theme color updates might require specific Tailwind setup or custom CSS not fully implemented here.");
+        }
+
+        // Save API Key (Insecurely in LocalStorage for Demo)
+        function saveApiKey() {
+            openRouterApiKey = openRouterApiKeyInput.value.trim();
+            if (openRouterApiKey) {
+                localStorage.setItem(OPENROUTER_API_KEY_STORAGE_KEY, openRouterApiKey);
+                 showStatus("API Key saved locally (insecure).");
+            } else {
+                localStorage.removeItem(OPENROUTER_API_KEY_STORAGE_KEY);
+                 showStatus("API Key removed.", false);
+            }
+        }
+
+        // --- OpenRouter API Call ---
+        async function callOpenRouter(prompt) {
+            if (!openRouterApiKey) {
+                aiResponseContent.textContent = "Error: OpenRouter API Key not set. Please add it in Settings.";
+                aiResponseArea.classList.remove('hidden');
+                navigateTo('settings'); // Guide user to settings
+                return;
+            }
+
+            aiResponseContent.textContent = ""; // Clear previous response
+            aiResponseLoader.classList.remove('hidden');
+            aiResponseArea.classList.remove('hidden');
+            showStatus("Contacting AI...", true);
+
+            try {
+                const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${openRouterApiKey}`,
+                        "HTTP-Referer": YOUR_SITE_URL, // Optional
+                        "X-Title": YOUR_SITE_NAME,    // Optional
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        // Recommended: Choose a specific model via OpenRouter.
+                        // "model": "openai/gpt-3.5-turbo",
+                         "model": "deepseek/deepseek-chat-v3-0324:free", // Example free model
+                         // "model": "mistralai/mistral-7b-instruct", // Another option
+                        "messages": [
+                            { "role": "system", "content": "You are a helpful assistant." },
+                            { "role": "user", "content": prompt }
+                        ]
+                    })
+                });
+
+                 hideStatus(); // Hide loading bar once fetch is done
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    console.error("API Error Data:", errorData);
+                    throw new Error(`API Error: ${response.status} ${errorData.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                 console.log("API Response:", data);
+
+                if (data.choices && data.choices.length > 0) {
+                    // Basic Markdown Handling (newlines)
+                    const formattedResponse = data.choices[0].message.content.replace(/\n/g, '<br>');
+                    aiResponseContent.innerHTML = formattedResponse; // Use innerHTML for <br> tags
+                } else {
+                     aiResponseContent.textContent = "No response content received from AI.";
+                }
+
+            } catch (error) {
+                 console.error("Error calling OpenRouter:", error);
+                 aiResponseContent.textContent = `Error: ${error.message}. Check console for details. Is the API key valid?`;
+                 hideStatus();
+            } finally {
+                 aiResponseLoader.classList.add('hidden');
+            }
+        }
+
+        // --- Visual Editor Simulation ---
+
+        function selectElement(element) {
+            if (!element || !element.classList.contains('draggable')) return; // Only select draggable things
+
+            // Deselect previous
+            if (currentSelectedElement) {
+                 currentSelectedElement.classList.remove('selected-element');
+            }
+
+            // Select new
+            currentSelectedElement = element;
+            currentSelectedElement.classList.add('selected-element');
+
+            // Update Inspector Panel
+            inspectorPlaceholder.classList.add('hidden');
+            inspectorContent.classList.remove('hidden');
+
+            propElementId.textContent = `Selected: #${element.id}`;
+
+            // Populate inspector (rudimentary)
+            propTextContent.value = element.querySelector('.editable-text')?.textContent || element.textContent || '';
+            propTextContent.disabled = !element.querySelector('.editable-text') && !element.classList.contains('editable-text');
+
+
+            // Get actual computed styles (more reliable but complex for demo)
+            const styles = window.getComputedStyle(element);
+            propBgColor.value = rgbToHex(styles.backgroundColor); // Need helper for conversion
+            propTextColor.value = rgbToHex(styles.color);
+            propPadding.value = parseInt(styles.paddingTop) || 0; // Just use one padding value
+
+        }
+
+        function deselectElement() {
+             if (currentSelectedElement) {
+                 currentSelectedElement.classList.remove('selected-element');
+                 currentSelectedElement = null;
+             }
+             inspectorPlaceholder.classList.remove('hidden');
+             inspectorContent.classList.add('hidden');
+        }
+
+        function updateElementStyle(property, value) {
+            if (!currentSelectedElement) return;
+
+            // IMPORTANT: In a real app, you wouldn't just change inline styles.
+            // You'd need to:
+            // 1. Identify the relevant CSS rule (hard).
+            // 2. Modify the source CSS file (requires backend/filesystem access).
+            // 3. Or, manage styles via classes and update class lists (better).
+            // 4. Or, use a CSS-in-JS approach if the project uses it.
+            // This simulation just uses inline styles for demonstration.
+
+            switch(property) {
+                case 'textContent':
+                     const textElement = currentSelectedElement.querySelector('.editable-text') || (currentSelectedElement.classList.contains('editable-text') ? currentSelectedElement : null);
+                     if(textElement) {
+                        textElement.textContent = value;
+                     }
+                     break;
+                case 'backgroundColor':
+                    currentSelectedElement.style.backgroundColor = value;
+                    break;
+                case 'color':
+                    currentSelectedElement.style.color = value;
+                    break;
+                 case 'padding':
+                    currentSelectedElement.style.padding = `${value}px`;
+                     break;
+            }
+             showStatus("Style updated (simulated)", false);
+        }
+
+
+        // Basic Drag Simulation
+        let draggedElement = null;
+        function handleDragStart(e) {
+            if (e.target.classList.contains('draggable')) {
+                 draggedElement = e.target;
+                 e.dataTransfer.effectAllowed = 'move';
+                 // e.dataTransfer.setData('text/plain', e.target.id); // Optional
+                 setTimeout(() => e.target.classList.add('dragging'), 0); // Make it visually dragging
+                 showStatus(`Dragging #${e.target.id}...`, true)
+            } else {
+                 e.preventDefault(); // Don't allow dragging non-draggable things
+            }
+        }
+        function handleDragEnd(e) {
+             if(draggedElement) {
+                 draggedElement.classList.remove('dragging');
+                 draggedElement = null;
+                 hideStatus();
+             }
+        }
+        function handleDragOver(e) {
+             e.preventDefault(); // Necessary to allow dropping
+             e.dataTransfer.dropEffect = 'move';
+        }
+        function handleDrop(e) {
+             e.preventDefault();
+             if (draggedElement && e.target !== draggedElement) {
+                 // Basic reordering simulation: append dragged element after target's parent (very crude)
+                 // A real implementation needs complex logic to find the correct drop zone and insert relative to siblings.
+                 const dropTarget = e.target.closest('.draggable') || e.target.closest('#visual-editor-canvas > div'); // Find nearest draggable or container
+                 if (dropTarget && dropTarget !== draggedElement && dropTarget.parentNode) {
+                    // Simple: move dragged element after the drop target's container (if possible)
+                    //dropTarget.parentNode.insertBefore(draggedElement, dropTarget.nextSibling);
+                     console.log(`Simulated drop of #${draggedElement.id} near #${e.target.id}. Reordering logic needed.`);
+                     showStatus(`Dropped #${draggedElement.id} (simulated)`, false);
+                 }
+             }
+              if(draggedElement) {
+                  draggedElement.classList.remove('dragging');
+                  draggedElement = null;
+                  hideStatus();
+              }
+        }
+
+
+        // Helper: Convert RGB color string to HEX
+        function rgbToHex(rgb) {
+            if (!rgb || !rgb.startsWith('rgb')) return '#000000'; // Default or handle errors
+            // Choose correct separator
+            let sep = rgb.indexOf(",") > -1 ? "," : " ";
+            // Turn "rgb(r,g,b)" into [r,g,b]
+            rgb = rgb.substr(4).split(")")[0].split(sep);
+
+            let r = (+rgb[0]).toString(16),
+                g = (+rgb[1]).toString(16),
+                b = (+rgb[2]).toString(16);
+
+            if (r.length == 1) r = "0" + r;
+            if (g.length == 1) g = "0" + g;
+            if (b.length == 1) b = "0" + b;
+
+            return "#" + r + g + b;
+        }
+
+
+        // --- Event Listeners ---
+
+        // Navigation
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const viewId = link.dataset.view;
+                navigateTo(viewId);
+                // Update URL hash (optional)
+                // window.location.hash = viewId;
+            });
+        });
+
+        // Theme Toggle
+        themeToggleButton.addEventListener('click', toggleTheme);
+
+        // Theme Color Pickers
+         primaryColorPicker.addEventListener('input', (e) => updateThemeColor('--primary-color', e.target.value));
+         secondaryColorPicker.addEventListener('input', (e) => updateThemeColor('--secondary-color', e.target.value));
+
+         // API Key Handling
+         saveApiKeyBtn.addEventListener('click', saveApiKey);
+         openRouterApiKeyInput.value = openRouterApiKey; // Load saved key on init
+
+         // AI Interaction
+         sendToAiBtn.addEventListener('click', () => {
+            const prompt = aiPromptInput.value.trim();
+            if (prompt) {
+                callOpenRouter(prompt);
+            } else {
+                aiResponseContent.textContent = "Please enter a prompt.";
+                aiResponseArea.classList.remove('hidden');
+            }
+         });
+
+         askAiGeneralBtn.addEventListener('click', () => {
+            const generalPrompt = prompt("What would you like to ask the AI?");
+             if (generalPrompt) {
+                 navigateTo('dashboard'); // Switch to dashboard to show response there
+                 aiPromptInput.value = generalPrompt; // Pre-fill dashboard prompt
+                 callOpenRouter(generalPrompt);
+             }
+         });
+
+          // Backend Simulation Button
+          generateBackendCodeBtn.addEventListener('click', () => {
+              const prompt = document.getElementById('backend-prompt').value;
+              if (!prompt) { alert("Please enter a backend change description."); return; }
+               showStatus("Simulating backend code generation...", true);
+              // Simulate a delay and show the example
+              setTimeout(() => {
+                  backendResultDiv.classList.remove('hidden');
+                   showStatus("Backend change simulated.", false);
+              }, 1500);
+          });
+
+
+          // Visual Editor Interaction
+          visualEditorCanvas.addEventListener('click', (e) => {
+               const targetElement = e.target.closest('.draggable'); // Find the nearest draggable ancestor
+               if (targetElement) {
+                    selectElement(targetElement);
+               } else if (!inspectorPanel.contains(e.target)) {
+                   // Deselect if clicking outside draggable elements and outside the inspector
+                   deselectElement();
+               }
+          });
+
+          // Inspector Controls -> Update Element
+          propTextContent.addEventListener('input', (e) => updateElementStyle('textContent', e.target.value));
+          propBgColor.addEventListener('input', (e) => updateElementStyle('backgroundColor', e.target.value));
+          propTextColor.addEventListener('input', (e) => updateElementStyle('color', e.target.value));
+          propPadding.addEventListener('input', (e) => updateElementStyle('padding', e.target.value));
+
+          // Visual Editor Drag & Drop Simulation
+          visualEditorCanvas.addEventListener('dragstart', handleDragStart);
+          visualEditorCanvas.addEventListener('dragend', handleDragEnd);
+          visualEditorCanvas.addEventListener('dragover', handleDragOver);
+          visualEditorCanvas.addEventListener('drop', handleDrop);
+
+
+        // --- Initialization ---
+
+        // Apply persisted theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        }
+
+        // Apply persisted theme colors (if implemented fully)
+        // updateThemeColor('--primary-color', localStorage.getItem('primary-color') || '#4f46e5');
+        // updateThemeColor('--secondary-color', localStorage.getItem('secondary-color') || '#ec4899');
+        primaryColorPicker.value = document.documentElement.style.getPropertyValue('--primary-color') || '#4f46e5';
+        secondaryColorPicker.value = document.documentElement.style.getPropertyValue('--secondary-color') || '#ec4899';
+
+
+        // Initial View Setup (e.g., based on hash or default to dashboard)
+        const initialView = window.location.hash.substring(1) || 'dashboard';
+        // Ensure view exists before navigating
+        const initialLink = document.querySelector(`.nav-link[data-view="${initialView}"]`);
+        if(initialLink) {
+            navigateTo(initialView);
+        } else {
+            navigateTo('dashboard'); // Default fallback
+        }
+
+        // Simulate project loading message after a short delay
+        setTimeout(() => {
+            document.getElementById('loaded-project').classList.remove('hidden');
+        }, 1000);
+
+        console.log("AI Code Assistant Mockup Initialized.");
+         showStatus("Mockup ready.", false);
+
+    </script>
+
+</body>
+</html>

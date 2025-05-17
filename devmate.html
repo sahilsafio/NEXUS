@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Bot</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #5c6bc0;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 400px; /* Or adjust as needed */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background-color: #e3f2fd;
+            color: #1e88e5;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot {
+            background-color: #f1f1f1;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.error {
+            background-color: #ffebee;
+            color: #c62828;
+            align-self: center;
+            font-style: italic;
+        }
+        
+        .message.typing {
+            font-style: italic;
+            color: #777;
+            align-self: flex-start;
+        }
+
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+
+        #userInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 10px;
+            font-size: 1em;
+        }
+
+        #sendButton {
+            padding: 10px 20px;
+            background-color: #5c6bc0;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+        #sendButton:hover {
+            background-color: #3f51b5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">OpenRouter AI Chat</div>
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be appended here -->
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Type your message...">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // --- START OF CONFIGURATION ---
+        const OPENROUTER_API_KEY = "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"; // ⚠️ PASTE YOUR KEY HERE ⚠️
+        const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+        const MODEL_NAME = "openai/gpt-3.5-turbo"; // Or any other model like "mistralai/mistral-7b-instruct"
+
+        // For non-local deployment, update these. For local testing, placeholders are fine.
+        const YOUR_SITE_URL = "http://localhost"; // Or your actual site URL
+        const YOUR_SITE_NAME = "Local Test Chat"; // Or your actual site name
+        // --- END OF CONFIGURATION ---
+
+
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        let conversationHistory = [
+            // You can add a system prompt here to define the bot's persona or instructions
+            // { role: "system", content: "You are a helpful and friendly assistant." }
+        ];
+
+        function addMessage(text, sender, type = 'normal') {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (type === 'error') {
+                messageDiv.classList.add('error');
+            } else if (type === 'typing') {
+                messageDiv.classList.add('typing');
+            } else {
+                 messageDiv.classList.add(sender);
+            }
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+            return messageDiv; // Return the div if we need to remove it (e.g., typing indicator)
+        }
+
+        async function fetchBotResponse(userMessageText) {
+            if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === "REPLACE_WITH_YOUR_OPENROUTER_API_KEY") {
+                addMessage("API Key not configured. Please set it in the script.", "bot", "error");
+                return;
+            }
+
+            // Add user message to conversation history
+            conversationHistory.push({ role: "user", content: userMessageText });
+
+            const typingIndicator = addMessage("Bot is typing...", "bot", "typing");
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                        'Content-Type': 'application/json',
+                        // OpenRouter specific headers (optional for local, recommended for deployed)
+                        'HTTP-Referer': YOUR_SITE_URL, 
+                        'X-Title': YOUR_SITE_NAME, 
+                    },
+                    body: JSON.stringify({
+                        model: MODEL_NAME,
+                        messages: conversationHistory 
+                    })
+                });
+
+                chatMessages.removeChild(typingIndicator); // Remove typing indicator
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({})); // Try to parse error, fallback to empty obj
+                    console.error('API Error:', response.status, errorData);
+                    addMessage(`Error: ${response.status} - ${errorData.error?.message || 'Failed to fetch response.'}`, "bot", "error");
+                    // Remove the last user message from history if the API call failed,
+                    // so they can try re-sending or rephrasing.
+                    conversationHistory.pop(); 
+                    return;
+                }
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                    const botResponseText = data.choices[0].message.content;
+                    addMessage(botResponseText, "bot");
+                    // Add bot response to conversation history
+                    conversationHistory.push({ role: "assistant", content: botResponseText });
+                } else {
+                    console.error('Invalid API response structure:', data);
+                    addMessage("Received an unexpected response from the AI.", "bot", "error");
+                }
+
+            } catch (error) {
+                if (typingIndicator && chatMessages.contains(typingIndicator)) {
+                    chatMessages.removeChild(typingIndicator);
+                }
+                console.error('Fetch Error:', error);
+                addMessage(`Network or other error: ${error.message}`, "bot", "error");
+                // Remove the last user message from history if the API call failed
+                conversationHistory.pop();
+            }
+        }
+
+        function handleSendMessage() {
+            const messageText = userInput.value.trim();
+            if (messageText) {
+                addMessage(messageText, "user");
+                fetchBotResponse(messageText);
+                userInput.value = ""; // Clear input
+            }
+        }
+
+        sendButton.addEventListener('click', handleSendMessage);
+        userInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                handleSendMessage();
+            }
+        });
+
+        // Initial greeting or instruction (optional)
+        addMessage("Hello! How can I help you today?", "bot");
+        // Or if you have a system prompt:
+        // if(conversationHistory.length > 0 && conversationHistory[0].role === "system"){
+        //     addMessage("System prompt active. How can I help?", "bot");
+        // }
+
+    </script>
+
+</body>
+</html>
